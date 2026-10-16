@@ -1,6 +1,8 @@
 package ru.practicum;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
@@ -11,13 +13,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+@Component
 public class StatsClient {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final RestTemplate restTemplate;
     private final String serverUrl;
 
-    public StatsClient(RestTemplate restTemplate, String serverUrl) {
-        this.restTemplate = restTemplate;
+    public StatsClient(@Value("${stats-server.url}") String serverUrl) {
+        this.restTemplate = new RestTemplate();
         this.serverUrl = serverUrl;
     }
 
