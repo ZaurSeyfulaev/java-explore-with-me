@@ -116,7 +116,7 @@ public class EventService {
         Event event = getEvent(eventId);
         patchEvent(event, dto.getAnnotation(), dto.getCategory(), dto.getDescription(),
                 dto.getEventDate(), dto.getLocation(), dto.getPaid(), dto.getParticipantLimit(),
-                dto.getRequestModeration(), dto.getTitle(), null);
+                dto.getRequestModeration(), dto.getTitle(), 0L);
         if (dto.getStateAction() == AdminStateAction.PUBLISH_EVENT) {
             if (event.getState() != EventState.PENDING) {
                 throw new ConflictException("Cannot publish event not in pending state");
@@ -143,8 +143,25 @@ public class EventService {
         checkRange(rangeStart, rangeEnd);
         sendHit(request);
         LocalDateTime start = rangeStart != null ? rangeStart : LocalDateTime.now();
-        List<Event> events = eventRepository.findPublicEvents(
-                EventState.PUBLISHED, text, emptyToNull(categories), paid, start, rangeEnd);
+        List<Event> events = eventRepository.findPublicEvents(EventState.PUBLISHED, start, rangeEnd);
+        if (text != null && !text.isBlank()) {
+            String query = text.toLowerCase();
+            events = events.stream()
+                    .filter(event -> event.getAnnotation().toLowerCase().contains(query)
+                            || event.getDescription().toLowerCase().contains(query))
+                    .collect(Collectors.toList());
+        }
+        List<Long> cats = emptyToNull(categories);
+        if (cats != null) {
+            events = events.stream()
+                    .filter(event -> cats.contains(event.getCategory().getId()))
+                    .collect(Collectors.toList());
+        }
+        if (paid != null) {
+            events = events.stream()
+                    .filter(event -> paid.equals(event.getPaid()))
+                    .collect(Collectors.toList());
+        }
         List<EventShortDto> result = toShortDtos(events);
         if (onlyAvailable) {
             Map<Long, Event> byId = events.stream().collect(Collectors.toMap(Event::getId, event -> event));
@@ -201,7 +218,7 @@ public class EventService {
                     LocalDateTime.of(1970, 1, 1, 0, 0),
                     LocalDateTime.now().plusYears(100),
                     uris,
-                    false);
+                    true);
             for (ViewStatsDto stat : stats) {
                 String uri = stat.getUri();
                 Long id = Long.parseLong(uri.substring(uri.lastIndexOf('/') + 1));
@@ -230,7 +247,7 @@ public class EventService {
 
     private void checkEventDate(LocalDateTime eventDate, long hours) {
         if (eventDate.isBefore(LocalDateTime.now().plusHours(hours))) {
-            throw new ConflictException("Event date is too soon");
+            throw new ValidationException("Event date is too soon");
         }
     }
 

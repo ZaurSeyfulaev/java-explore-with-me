@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -40,7 +41,7 @@ public class StatsClient {
                 url.append("&uris=").append(encode(uri));
             }
         }
-        ResponseEntity<ViewStatsDto[]> response = restTemplate.getForEntity(url.toString(), ViewStatsDto[].class);
+        ResponseEntity<ViewStatsDto[]> response = restTemplate.getForEntity(URI.create(url.toString()), ViewStatsDto[].class);
         ViewStatsDto[] body = response.getBody();
         if (body == null) {
             return Collections.emptyList();
@@ -49,6 +50,6 @@ public class StatsClient {
     }
 
     private String encode(String text) {
-        return URLEncoder.encode(text, StandardCharsets.UTF_8);
+        return URLEncoder.encode(text, StandardCharsets.UTF_8).replace("+", "%20");
     }
 }

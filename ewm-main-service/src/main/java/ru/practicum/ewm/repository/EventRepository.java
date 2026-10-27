@@ -48,16 +48,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "join fetch e.category " +
             "join fetch e.initiator " +
             "where e.state = :state " +
-            "and (:text is null or (lower(e.annotation) like lower(concat('%', :text, '%')) " +
-            "or lower(e.description) like lower(concat('%', :text, '%')))) " +
-            "and (:categories is null or e.category.id in :categories) " +
-            "and (:paid is null or e.paid = :paid) " +
             "and e.eventDate >= :rangeStart " +
             "and (cast(:rangeEnd as timestamp) is null or e.eventDate <= :rangeEnd)")
     List<Event> findPublicEvents(@Param("state") EventState state,
-                                 @Param("text") String text,
-                                 @Param("categories") List<Long> categories,
-                                 @Param("paid") Boolean paid,
                                  @Param("rangeStart") LocalDateTime rangeStart,
                                  @Param("rangeEnd") LocalDateTime rangeEnd);
 }
