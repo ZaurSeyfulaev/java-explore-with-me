@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.EndpointHitDto;
 import ru.practicum.ViewStatsDto;
+import ru.practicum.ewm.stats.exception.ValidationException;
 import ru.practicum.ewm.stats.mapper.HitMapper;
 import ru.practicum.ewm.stats.repository.StatsRepository;
 
@@ -24,6 +25,9 @@ public class StatsService {
     }
 
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
+        if (start.isAfter(end)) {
+            throw new ValidationException("Start must not be after end");
+        }
         boolean hasUris = uris != null && !uris.isEmpty();
 
         if (unique) {
