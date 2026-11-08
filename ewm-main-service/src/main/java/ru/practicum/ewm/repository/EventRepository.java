@@ -53,6 +53,17 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findPublicEvents(@Param("state") EventState state,
                                  @Param("rangeStart") LocalDateTime rangeStart,
                                  @Param("rangeEnd") LocalDateTime rangeEnd);
+
+    @EntityGraph(attributePaths = {"category", "initiator"})
+    @Query("select e from Event e " +
+            "where e.initiator.id in :users " +
+            "and e.state = :state " +
+            "and e.eventDate >= :rangeStart " +
+            "order by e.eventDate")
+    Page<Event> findPublishedByInitiatorIds(@Param("users") List<Long> users,
+                                            @Param("state") EventState state,
+                                            @Param("rangeStart") LocalDateTime rangeStart,
+                                            Pageable pageable);
 }
 
 

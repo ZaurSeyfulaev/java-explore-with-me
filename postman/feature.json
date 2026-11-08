@@ -1,0 +1,399 @@
+{
+  "info": {
+    "name": "ExploreWithMe subscriptions",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.collectionVariables.set('runId', Date.now().toString());",
+          "const d = new Date();",
+          "d.setDate(d.getDate() + 3);",
+          "function pad(n) {",
+          "    return (n < 10 ? '0' : '') + n;",
+          "}",
+          "pm.collectionVariables.set('eventDate', d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Подготовка",
+      "item": [
+        {
+          "name": "Добавление пользователя-подписчика",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set('followerId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sub{{runId}}@mail.ru\",\n  \"name\": \"Subscriber\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/users"
+          }
+        },
+        {
+          "name": "Добавление пользователя-автора",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set('followingId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ini{{runId}}@mail.ru\",\n  \"name\": \"Initiator\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/users"
+          }
+        },
+        {
+          "name": "Добавление категории",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set('categoryId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"cat{{runId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/categories"
+          }
+        },
+        {
+          "name": "Создание события автором",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set('eventId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annotation\": \"Annotation for subscription event\",\n  \"category\": {{categoryId}},\n  \"description\": \"Description for subscription event\",\n  \"eventDate\": \"{{eventDate}}\",\n  \"location\": {\n    \"lat\": 55.75,\n    \"lon\": 37.61\n  },\n  \"title\": \"Subscription event\"\n}"
+            },
+            "url": "{{baseUrl}}/users/{{followingId}}/events"
+          }
+        },
+        {
+          "name": "Публикация события",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stateAction\": \"PUBLISH_EVENT\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/events/{{eventId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Подписки",
+      "item": [
+        {
+          "name": "Подписка на себя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 409', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions/{{followerId}}"
+          }
+        },
+        {
+          "name": "Подписка на пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions/{{followingId}}"
+          }
+        },
+        {
+          "name": "Повторная подписка",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 409', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions/{{followingId}}"
+          }
+        },
+        {
+          "name": "Подписка на несуществующего пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions/9999999"
+          }
+        },
+        {
+          "name": "Получение подписок",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions?from=0&size=10"
+          }
+        },
+        {
+          "name": "Получение актуальных событий подписок",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions/events?from=0&size=10"
+          }
+        },
+        {
+          "name": "Отписка",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions/{{followingId}}"
+          }
+        },
+        {
+          "name": "Повторная отписка",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions/{{followingId}}"
+          }
+        },
+        {
+          "name": "Лента без подписок",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ответ должен содержать код статуса 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{followerId}}/subscriptions/events"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "runId",
+      "value": ""
+    },
+    {
+      "key": "eventDate",
+      "value": ""
+    },
+    {
+      "key": "followerId",
+      "value": ""
+    },
+    {
+      "key": "followingId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "eventId",
+      "value": ""
+    }
+  ]
+}
