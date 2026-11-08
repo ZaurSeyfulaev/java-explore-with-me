@@ -76,6 +76,15 @@ public class EventService {
         return toShortDtos(events);
     }
 
+    public List<EventShortDto> getPublishedEventsByUsers(List<Long> userIds, int from, int size) {
+        List<Event> events = eventRepository.findPublishedByInitiatorIds(
+                userIds,
+                EventState.PUBLISHED,
+                LocalDateTime.now(),
+                PageRequest.of(from / size, size)).getContent();
+        return toShortDtos(events);
+    }
+
     public EventFullDto getUserEvent(Long userId, Long eventId) {
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
